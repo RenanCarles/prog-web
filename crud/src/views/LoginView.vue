@@ -4,22 +4,22 @@
       <v-card-title class="text-center text-h6 font-weight-bold">LOGIN</v-card-title>
 
       <v-card-text>
-        <v-form @submit.prevent="handleSubmit(onSubmit)">
+        <v-form @submit.prevent="handleSubmit">
           <v-text-field
-            label="Usuário (e-mail)"
-            v-model="username"
-            :error-messages="usernameTouched && usernameError ? [usernameError] : []"
+            label="E-mail"
+            v-model="form.username"
+            :error-messages="fieldErrors.username"
             outlined dense autocomplete="off" class="mb-4"
-            @blur="usernameBlur"
+            @blur="() => touched.username = true"
           />
 
           <v-text-field
             label="Senha"
             type="password"
-            v-model="password"
-            :error-messages="passwordTouched && passwordError ? [passwordError] : []"
+            v-model="form.password"
+            :error-messages="fieldErrors.password"
             outlined dense autocomplete="new-password" class="mb-4"
-            @blur="passwordBlur"
+            @blur="() => touched.password = true"
           />
 
           <v-btn type="submit" color="indigo" block class="text-white">Login</v-btn>
@@ -33,6 +33,14 @@
         </v-form>
       </v-card-text>
     </v-card>
+
+    <v-snackbar
+      v-model="snackbar.show"
+      :color="snackbar.color"
+      :timeout="3000"
+    >
+      {{ snackbar.message }}
+    </v-snackbar>
   </v-container>
 </template>
 
@@ -40,61 +48,97 @@
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
 import { firebaseApp } from '../firebase/firebase'
 
-import { useForm, useField } from 'vee-validate'
-import * as yup from 'yup'
-
 export default {
   name: 'LoginView',
-  setup(_, { router }) {
-    // Schema de validação com Yup
-    const schema = yup.object({
-      username: yup.string().email('E-mail inválido').required('E-mail é obrigatório'),
-      password: yup.string().required('Senha é obrigatória'),
-    });
-
-    const { handleSubmit } = useForm({
-      validationSchema: schema,
-    });
-
-    // Campos e validação
-    const {
-      value: username,
-      errorMessage: usernameError,
-      meta: usernameMeta,
-      handleBlur: usernameBlur
-    } = useField('username');
-
-    const {
-      value: password,
-      errorMessage: passwordError,
-      meta: passwordMeta,
-      handleBlur: passwordBlur
-    } = useField('password');
-
-    // Lógica de login
-    const onSubmit = async (values) => {
-      const auth = getAuth(firebaseApp);
-      try {
-        await signInWithEmailAndPassword(auth, values.username, values.password);
-        router.push('/');
-      } catch (error) {
-        alert('Credenciais inválidas');
-        console.log(error.message);
-      }
-    };
-
+  data() {
     return {
-      handleSubmit,
-      onSubmit,
-      username,
-      usernameError,
-      usernameTouched: usernameMeta.touched,
-      usernameBlur,
-      password,
-      passwordError,
-      passwordTouched: passwordMeta.touched,
-      passwordBlur,
-    };
+      form: {
+        username: '',
+        password: '',
+      },
+      touched: {
+        username: false,
+        password: false,
+      },
+      fieldErrors: {
+        username: '',
+        password: '',
+      },
+      snackbar: {
+        show: false,
+        message: '',
+        color: 'error'
+      }
+    }
+  },
+  methods: {
+    validateForm() {
+      let isValid = true
+      
+      // Reset errors
+      this.fieldErrors = {
+        username: '',
+        password: '',
+      }
+
+      // Email validation
+      if (!this.form.username.trim()) {
+        this.fieldErrors.username = 'E-mail é obrigatório'
+        isValid = false
+      } else if (!/^\S+@\S+\.\S+$/.test(this.form.username)) {
+        this.fieldErrors.username = 'E-mail inválido'
+        isValid = false
+      }
+
+      // Password validation
+      if (!this.form.password) {
+        this.fieldErrors.password = 'Senha é obrigatória'
+        isValid = false
+      }
+
+      return isValid
+    },
+    
+    showSnackbar(message, color = 'error') {
+      this.snackbar.message = message
+      this.snackbar.color = color
+      this.snackbar.show = true
+    },
+
+    async handleSubmit() {
+      if (!this.validateForm()) {
+        this.showSnackbar('Por favor, corrija os erros no formulário')
+        return
+      }
+
+      try {
+        const auth = getAuth(firebaseApp)
+        await signInWithEmailAndPassword(auth, this.form.username, this.form.password)
+        this.$router.push('/')
+      } catch (error) {
+        let errorMessage = 'Erro ao fazer login'
+        
+        // Tratamento de erros comuns do Firebase
+        switch (error.code) {
+          case 'auth/invalid-email':
+            errorMessage = 'E-mail inválido'
+            break
+          case 'auth/user-disabled':
+            errorMessage = 'Esta conta está desativada'
+            break
+          case 'auth/user-not-found':
+            errorMessage = 'Usuário não encontrado'
+            break
+          case 'auth/wrong-password':
+            errorMessage = 'Senha incorreta'
+            break
+          default:
+            console.error(error)
+        }
+        
+        this.showSnackbar(errorMessage)
+      }
+    }
   }
 }
 </script>

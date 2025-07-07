@@ -1,100 +1,151 @@
 <template>
-    <v-container class="fill-height d-flex justify-center align-center">
-      <v-card class="pa-6" width="400" elevation="6">
-        <v-card-title class="text-center text-h6 font-weight-bold">Cadastrar</v-card-title>
-  
-        <v-card-text>
-          <v-form @submit.prevent="handleSubmit(onSubmit)">
-            <v-text-field
-              label="Usuário"
-              v-model="values.username"
-              :error-messages="errors.username"
-              outlined dense class="mb-4"
-            />
-            <v-text-field
-              label="Email"
-              type="email"
-              v-model="values.email"
-              :error-messages="errors.email"
-              outlined dense class="mb-4"
-            />
-            <v-text-field
-              label="Senha"
-              type="password"
-              v-model="values.password"
-              :error-messages="errors.password"
-              outlined dense class="mb-4"
-            />
-            <v-text-field
-              label="Confirmar Senha"
-              type="password"
-              v-model="values.confirmPassword"
-              :error-messages="errors.confirmPassword"
-              outlined dense class="mb-4"
-            />
-            <v-btn type="submit" color="indigo" block class="text-white">Cadastrar</v-btn>
-            <div class="text-center mt-4">
-              <p>Já possui conta? <RouterLink to="/login">Login</RouterLink></p>
-            </div>
-          </v-form>
-        </v-card-text>
-      </v-card>
-    </v-container>
-  </template>
-  
-  <script>
-  import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth'
-  import { firebaseApp } from '../firebase/firebase'
-  
-  import { useForm } from 'vee-validate'
-  import * as yup from 'yup'
-  
-  export default {
-    name: 'RegisterView',
-    setup() {
-      const schema = yup.object({
-        username: yup.string().required('Usuário é obrigatório'),
-        email: yup.string().email('E-mail inválido').required('E-mail é obrigatório'),
-        password: yup.string()
-          .required('Senha é obrigatória')
-          .matches(
-            /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}$/,
-            'Senha fraca! Use 8+ caracteres com letras maiúsculas, minúsculas, números e símbolos.'
-          ),
-        confirmPassword: yup.string()
-          .oneOf([yup.ref('password')], 'As senhas não coincidem')
-          .required('Confirmação de senha é obrigatória'),
-      });
-  
-      const { handleSubmit, errors, values } = useForm({
-        validationSchema: schema,
-        initialValues: {
-          username: '',
-          email: '',
-          password: '',
-          confirmPassword: '',
-        }
-      });
-  
-      const onSubmit = async (values) => {
-        const auth = getAuth(firebaseApp);
-        try {
-          await createUserWithEmailAndPassword(auth, values.email, values.password);
-          alert('Usuário cadastrado com sucesso!');
-          window.location.href = '/login'; // ou use this.$router.push
-        } catch (error) {
-          alert(error.message);
-          console.error(error.message);
-        }
-      };
-  
-      return {
-        values,
-        errors,
-        handleSubmit,
-        onSubmit,
+  <v-container class="fill-height d-flex justify-center align-center">
+    <v-card class="pa-6" width="400" elevation="6">
+      <v-card-title class="text-center text-h6 font-weight-bold">Cadastrar</v-card-title>
+
+      <v-card-text>
+        <v-form @submit.prevent="handleSubmit">
+          <v-text-field
+            label="Usuário"
+            v-model="form.username"
+            :error-messages="fieldErrors.username"
+            outlined dense class="mb-4"
+          />
+          <v-text-field
+            label="Email"
+            type="email"
+            v-model="form.email"
+            :error-messages="fieldErrors.email"
+            outlined dense class="mb-4"
+          />
+          <v-text-field
+            label="Senha"
+            type="password"
+            v-model="form.password"
+            :error-messages="fieldErrors.password"
+            outlined dense class="mb-4"
+          />
+          <v-text-field
+            label="Confirmar Senha"
+            type="password"
+            v-model="form.confirmPassword"
+            :error-messages="fieldErrors.confirmPassword"
+            outlined dense class="mb-4"
+          />
+          <v-btn type="submit" color="indigo" block class="text-white">Cadastrar</v-btn>
+          <div class="text-center mt-4">
+            <p>Já possui conta? <RouterLink to="/login">Login</RouterLink></p>
+          </div>
+        </v-form>
+      </v-card-text>
+    </v-card>
+
+    <v-snackbar
+      v-model="snackbar.show"
+      :color="snackbar.color"
+      :timeout="3000"
+    >
+      {{ snackbar.message }}
+    </v-snackbar>
+  </v-container>
+</template>
+
+<script>
+import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth'
+import { firebaseApp } from '../firebase/firebase'
+
+export default {
+  name: 'RegisterView',
+  data() {
+    return {
+      form: {
+        username: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+      },
+      fieldErrors: {
+        username: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+      },
+      snackbar: {
+        show: false,
+        message: '',
+        color: 'error'
+      }
+    }
+  },
+  methods: {
+    validateForm() {
+      let isValid = true
+      
+      // Reset errors
+      this.fieldErrors = {
+        username: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+      }
+
+      // Username validation
+      if (!this.form.username.trim()) {
+        this.fieldErrors.username = 'Usuário é obrigatório'
+        isValid = false
+      }
+
+      // Email validation
+      if (!this.form.email.trim()) {
+        this.fieldErrors.email = 'E-mail é obrigatório'
+        isValid = false
+      }
+
+      // Password validation
+      if (!this.form.password) {
+        this.fieldErrors.password = 'Senha é obrigatória'
+        isValid = false
+      } else if (!/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}$/.test(this.form.password)) {
+        this.fieldErrors.password = 'Senha fraca! Use 8+ caracteres com letras maiúsculas, minúsculas, números e símbolos.'
+        isValid = false
+      }
+
+      // Confirm password validation
+      if (!this.form.confirmPassword) {
+        this.fieldErrors.confirmPassword = 'Confirmação de senha é obrigatória'
+        isValid = false
+      } else if (this.form.password !== this.form.confirmPassword) {
+        this.fieldErrors.confirmPassword = 'As senhas não coincidem'
+        isValid = false
+      }
+
+      return isValid
+    },
+    
+    showSnackbar(message, color = 'error') {
+      this.snackbar.message = message
+      this.snackbar.color = color
+      this.snackbar.show = true
+    },
+
+    async handleSubmit() {
+      if (!this.validateForm()) {
+        this.showSnackbar('Por favor, corrija os erros no formulário')
+        return
+      }
+
+      const auth = getAuth(firebaseApp)
+      try {
+        await createUserWithEmailAndPassword(auth, this.form.email, this.form.password)
+        this.showSnackbar('Usuário cadastrado com sucesso!', 'success')
+        setTimeout(() => {
+          this.$router.push('/login')
+        }, 1500)
+      } catch (error) {
+        let errorMessage = 'Erro ao cadastrar usuário'        
+        this.showSnackbar(errorMessage)
       }
     }
   }
-  </script>
-  
+}
+</script>
