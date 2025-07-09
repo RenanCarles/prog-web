@@ -1,7 +1,16 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const admin = require('firebase-admin');
+const serviceAccount = require('./serviceAccountKey.json');
 
+// Inicializar o Firebase Admin
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
+// Inicializar o Firestore
+const db = admin.firestore();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -10,112 +19,212 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-let fake_database = [
-  { id: 1, movieId: 101, text: 'Ótimo filme de ação!', rating: 4.5 },
-  { id: 2, movieId: 102, text: 'História envolvente e atuações incríveis.', rating: 5.0 },
-  { id: 3, movieId: 101, text: 'Efeitos especiais impressionantes, mas roteiro fraco.', rating: 3.5 },
-];
-
 // Rota raiz
 app.get('/', (req, res) => {
   res.json({ message: 'Bem-vindo à API de Feedback de Filmes!' });
 });
 
 
-// Inserir um novo feedback
-app.post('/api/feedback', (req, res) => {
-  // Verifica se os campos obrigatórios foram fornecidos
-  if (!req.body.movieId || !req.body.text || req.body.rating === undefined) {
-    return res.status(400).json({ message: 'Todos os campos são obrigatórios: movieId, text e rating' });
+// Obter todos os filmes
+app.get('/api/movies', (req, res) => {
+  try {
+    res.json(filmes);
+  } catch (error) {
+    console.error('Erro ao buscar filmes:', error);
+    res.status(500).json({ message: 'Erro ao buscar filmes', error: error.message });
   }
-
-  const newFeedback = {
-    id: fake_database.length > 0 ? Math.max(...fake_database.map(item => item.id)) + 1 : 1,
-    movieId: parseInt(req.body.movieId),
-    text: req.body.text,
-    rating: parseFloat(req.body.rating)
-  };
-  
-  fake_database.push(newFeedback);
-  res.status(201).json(newFeedback);
 });
 
-//Obter feedbacks por ID do filme
-app.get('/api/feedback/movie/:movieId', (req, res) => {
-  const movieId = parseInt(req.params.movieId);
-  const movieFeedbacks = fake_database.filter(item => item.movieId === movieId);
-  
-  if (movieFeedbacks.length === 0) {
-    return res.status(404).json({ message: 'Nenhum feedback encontrado para este filme' });
+// Obter um filme específico pelo ID
+app.get('/api/movies/:id', async (req, res) => {
+  try {
+    const id_filme = parseInt(req.params.id);
+    const snapshot = await db.collection('filmes')
+      .where('id', '==', id_filme)
+      .get();
+    
+    const filmes = [];
+    snapshot.forEach(doc => {
+      filmes.push({ id: doc.id, ...doc.data() });
+    });
+    
+    if (filmes.length === 0) {
+      return res.status(404).json({ message: 'Nenhum filme encontrado para este filme' });
+    }
+    
+    res.json(filmes);
+  } catch (error) {
+    console.error('Erro ao buscar filme:', error);
+    res.status(500).json({ message: 'Erro ao buscar filme', error: error.message });
   }
-  
-  res.json(movieFeedbacks);
+});
+
+// Inserir um novo feedback
+app.post('/api/feedback', async (req, res) => {
+  try {
+    // Verifica se os campos obrigatórios foram fornecidos
+    if (!req.body.id_filme || !req.body.comentario || req.body.nota === undefined) {
+      return res.status(400).json({ message: 'Todos os campos são obrigatórios: id_filme, comentario e nota' });
+    }
+
+    const newFeedback = {
+      id: avaliacoes.length > 0 ? String(Math.max(...avaliacoes.map(item => parseInt(item.id))) + 1) : '1',
+      id_filme: req.body.id_filme,
+      comentario: req.body.comentario,
+      nota: parseFloat(req.body.nota),
+      created_at: new Date()
+    };
+
+    await db.collection('avaliacoes').add(newFeedback);
+    
+    res.status(200).json({ message: 'Feedback enviado com sucesso' });
+  } catch (error) {
+    console.error('Erro ao inserir feedback:', error);
+    res.status(500).json({ message: 'Erro ao inserir feedback', error: error.message });
+  }
+});
+
+//Obter todos os feedbacks
+// app.get('/api/feedback', async (req, res) => {
+//   try {
+//     const snapshot = await db.collection('avaliacoes').get();
+//     const feedbacks = [];
+//     snapshot.forEach(doc => {
+//       feedbacks.push({ id: doc.id, ...doc.data() });
+//     });
+//     res.json(feedbacks);
+//   } catch (error) {
+//     console.error('Erro ao buscar feedbacks:', error);
+//     res.status(500).json({ message: 'Erro ao buscar feedbacks', error: error.message });
+//   }
+// });
+
+//Obter feedbacks por ID do filme
+app.get('/api/feedback/movie/:id_filme', async (req, res) => {
+  try {
+    const id_filme = parseInt(req.params.id_filme);
+    const snapshot = await db.collection('avaliacoes')
+      .where('id_filme', '==', id_filme)
+      .get();
+    
+    const feedbacks = [];
+    snapshot.forEach(doc => {
+      feedbacks.push({ id: doc.id, ...doc.data() });
+    });
+    
+    if (feedbacks.length === 0) {
+      return res.status(404).json({ message: 'Nenhum feedback encontrado para este filme' });
+    }
+    
+    res.json(feedbacks);
+  } catch (error) {
+    console.error('Erro ao buscar feedbacks do filme:', error);
+    res.status(500).json({ message: 'Erro ao buscar feedbacks do filme', error: error.message });
+  }
 });
 
 //Obter um feedback específico pelo ID
-app.get('/api/feedback/:id', (req, res) => {
-  const id = parseInt(req.params.id);
-  const item = fake_database.find(item => item.id === id);
-  
-  if (!item) {
-    return res.status(404).json({ message: 'Feedback não encontrado' });
-  }
-  
-  res.json(item);
-});
+// app.get('/api/feedback/:id', async (req, res) => {
+//   try {
+//     const docRef = db.collection('avaliacoes').doc(req.params.id);
+//     const doc = await docRef.get();
+    
+//     if (!doc.exists) {
+//       return res.status(404).json({ message: 'Feedback não encontrado' });
+//     }
+    
+//     res.json({ id: doc.id, ...doc.data() });
+//   } catch (error) {
+//     console.error('Erro ao buscar feedback:', error);
+//     res.status(500).json({ message: 'Erro ao buscar feedback', error: error.message });
+//   }
+// });
 
 //Obter a média de avaliações de um filme
-app.get('/api/movies/:movieId/rating', (req, res) => {
-  const movieId = parseInt(req.params.movieId);
-  const movieFeedbacks = fake_database.filter(item => item.movieId === movieId);
-  
-  if (movieFeedbacks.length === 0) {
-    return res.status(404).json({ message: 'Nenhum feedback encontrado para este filme' });
+app.get('/api/movies/:id_filme/rating', async (req, res) => {
+  try {
+    const id_filme = parseInt(req.params.id_filme);
+    const snapshot = await db.collection('avaliacoes')
+      .where('id_filme', '==', id_filme)
+      .get();
+    
+    if (snapshot.empty) {
+      return res.status(404).json({ message: 'Nenhum feedback encontrado para este filme' });
+    }
+    
+    let totalNota = 0;
+    let count = 0;
+    
+    snapshot.forEach(doc => {
+      totalNota += doc.data().nota;
+      count++;
+    });
+    
+    const mediaNotas = totalNota / count;
+    
+    res.json({ 
+      id_filme, 
+      media_notas: parseFloat(mediaNotas.toFixed(1)), 
+      total_avaliacoes: count 
+    });
+  } catch (error) {
+    console.error('Erro ao calcular média de notas:', error);
+    res.status(500).json({ message: 'Erro ao calcular média de notas', error: error.message });
   }
-  
-  const totalRating = movieFeedbacks.reduce((sum, item) => sum + item.rating, 0);
-  const averageRating = totalRating / movieFeedbacks.length;
-  
-  res.json({ 
-    movieId, 
-    averageRating: parseFloat(averageRating.toFixed(1)), 
-    totalFeedbacks: movieFeedbacks.length 
-  });
 });
 
-//Atualizar um feedback existente
-app.put('/api/feedback/:id', (req, res) => {
-  const id = parseInt(req.params.id);
-  const itemIndex = fake_database.findIndex(item => item.id === id);
-  
-  if (itemIndex === -1) {
-    return res.status(404).json({ message: 'Feedback não encontrado' });
+//Atualizar nota de um feedback existente
+app.put('/api/feedback/:id', async (req, res) => {
+  try {
+    const docRef = db.collection('avaliacoes').doc(req.params.id);
+    const doc = await docRef.get();
+    
+    if (!doc.exists) {
+      return res.status(404).json({ message: 'Feedback não encontrado' });
+    }
+    
+    const updateData = {};
+    
+    if (req.body.nota !== undefined) {
+      updateData.nota = parseFloat(req.body.nota);
+    }
+    
+    await docRef.update(updateData);
+    
+    // Busca o documento atualizado
+    const updatedDoc = await docRef.get();
+    
+    res.json({ 
+      id: updatedDoc.id, 
+      ...updatedDoc.data() 
+    });
+  } catch (error) {
+    console.error('Erro ao atualizar feedback:', error);
+    res.status(500).json({ message: 'Erro ao atualizar feedback', error: error.message });
   }
-  
-  const updatedItem = {
-    id: id,
-    movieId: req.body.movieId !== undefined ? parseInt(req.body.movieId) : fake_database[itemIndex].movieId,
-    text: req.body.text || fake_database[itemIndex].text,
-    rating: req.body.rating !== undefined ? parseFloat(req.body.rating) : fake_database[itemIndex].rating
-  };
-  
-  fake_database[itemIndex] = updatedItem;
-  res.json(updatedItem);
 });
 
 //Remover um feedback
-app.delete('/api/feedback/:id', (req, res) => {
-  const id = parseInt(req.params.id);
-  const itemIndex = fake_database.findIndex(item => item.id === id);
-  
-  if (itemIndex === -1) {
-    return res.status(404).json({ message: 'Feedback não encontrado' });
+app.delete('/api/feedback/:id', async (req, res) => {
+  try {
+    const docRef = db.collection('avaliacoes').doc(req.params.id);
+    const doc = await docRef.get();
+    
+    if (!doc.exists) {
+      return res.status(404).json({ message: 'Feedback não encontrado' });
+    }
+    
+    // Salva os dados do documento antes de excluí-lo
+    const deletedItem = { id: doc.id, ...doc.data() };
+    
+    // Exclui o documento
+    await docRef.delete();
+    
+    res.json({ message: 'Feedback removido com sucesso', item: deletedItem });
+  } catch (error) {
+    console.error('Erro ao remover feedback:', error);
+    res.status(500).json({ message: 'Erro ao remover feedback', error: error.message });
   }
-  
-  const deletedItem = fake_database[itemIndex];
-  fake_database.splice(itemIndex, 1);
-  
-  res.json({ message: 'Feedback removido com sucesso', item: deletedItem });
 });
 
 // Iniciando o servidor
