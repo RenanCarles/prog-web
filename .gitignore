@@ -2,6 +2,8 @@
 node_modules
 /dist
 
+# Chave do BD no Firebase
+ETL-BD/etl/firebase-service-account.json
 
 # local env files
 .env.local
