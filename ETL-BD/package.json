@@ -1,0 +1,17 @@
+{
+  "type": "module",
+  "scripts": {
+    "start": "node etl/run.js"
+  },
+  "dependencies": {
+    "axios": "^1.10.0",
+    "firebase-admin": "^13.4.0"
+  },
+  "name": "popularbanco",
+  "version": "1.0.0",
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
