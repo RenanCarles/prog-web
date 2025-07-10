@@ -4,7 +4,6 @@ import { firebaseApp } from "../firebase/firebase";
 
 const auth = getAuth(firebaseApp);
 
-// Componentes importados diretamente (para rotas principais)
 import HomeView from "../views/HomeView.vue";
 import LoginView from "@/views/LoginView.vue";
 import RegisterView from "@/views/RegisterView.vue";
@@ -31,19 +30,19 @@ const routes = [
     path: "/",
     name: "home",
     component: HomeView,
-    meta: { requiresAuth: false }, // Rota privada //SÓ para teste
+    meta: { requiresAuth: false }, 
   },
   {
     path: "/login",
     name: "login",
     component: LoginView,
-    meta: { requiresAuth: false }, // Rota pública explícita
+    meta: { requiresAuth: false }, 
   },
   {
     path: "/register",
-    name: "register", // Padronizei para lowercase como as outras rotas
+    name: "register", 
     component: RegisterView,
-    meta: { requiresAuth: false }, // Rota pública
+    meta: { requiresAuth: false }, 
   },
   {
     path: "/about",
