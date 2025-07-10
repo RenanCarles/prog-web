@@ -115,7 +115,7 @@ export default {
         const auth = getAuth(firebaseApp)
         await signInWithEmailAndPassword(auth, this.form.username, this.form.password)
         this.showSnackbar('Login realizado com sucesso!', 'success')
-        this.$router.push(this.$route.query.redirect || '/')
+        this.$router.push('/home')
       } catch (error) {
         let errorMessage = 'Erro ao fazer login'
         

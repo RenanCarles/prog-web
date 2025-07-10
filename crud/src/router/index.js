@@ -28,9 +28,13 @@ const authGuard = (to, from, next) => {
 const routes = [
   {
     path: "/",
+    redirect: "/login",
+  },
+  {
+    path: "/home",
     name: "home",
     component: HomeView,
-    meta: { requiresAuth: false }, 
+    meta: { requiresAuth: true }, 
   },
   {
     path: "/login",
@@ -45,19 +49,11 @@ const routes = [
     meta: { requiresAuth: false }, 
   },
   {
-    path: "/about",
-    name: "about",
-    component: () =>
-      import(/* webpackChunkName: "about" */ "../views/AboutView.vue"),
-    meta: { requiresAuth: true }, // Rota privada
-  },
-  {
     path: "/movie/:id",
     name: "movie-details",
     component: MovieDetailsView,
-    meta: { requiresAuth: false }, // Rota pública para que qualquer pessoa possa ver os detalhes do filme
+    meta: { requiresAuth: true },
   },
-  // Adicione outras rotas conforme necessário
 ];
 
 const router = createRouter({

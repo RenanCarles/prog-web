@@ -99,6 +99,9 @@ export default {
       if (!this.form.email.trim()) {
         this.fieldErrors.email = 'E-mail é obrigatório'
         isValid = false
+      } else if (!/^\S+@\S+\.\S+$/.test(this.form.username)) {
+        this.fieldErrors.username = 'E-mail inválido'
+        isValid = false
       }
 
       // Password validation

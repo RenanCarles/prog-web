@@ -2,7 +2,7 @@
   <div>
     <!-- Cabeçalho personalizado -->
     <div class="custom-header">
-      <h1 class="app-title">UNIFEIFLIX</h1>
+      <h1 class="app-title">FalaCine!</h1>
       <button class="logout-btn" @click="logout">
         <v-icon class="logout-icon">mdi-logout</v-icon>
         <span class="tooltip">Sair da conta</span>

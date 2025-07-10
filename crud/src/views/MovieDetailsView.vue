@@ -1,36 +1,40 @@
 <template>
   <div v-if="movie">
-    <v-container>
+    <v-container class="py-8">
       <v-row>
-        <v-col cols="12" md="4">
-          <v-img 
-            :src="getPosterUrl(movie.poster_path)" 
-            height="auto"
+        <!-- Poster do Filme -->
+        <v-col cols="12" md="4" class="d-flex justify-center">
+          <v-img
+            :src="getPosterUrl(movie.poster_path)"
             :aspect-ratio="2/3"
+            class="rounded-xl elevation-4"
+            max-width="100%"
             contain
-            class="rounded-lg poster-img"
           ></v-img>
         </v-col>
+
+        <!-- Informações do Filme -->
         <v-col cols="12" md="8">
-          <v-card elevation="3" class="pa-4">
-            <v-card-title class="text-h4 mb-2">{{ movie.title }}</v-card-title>
-            <v-card-subtitle class="text-subtitle-1 mb-4">
-              Data de lançamento: {{ formatDate(movie.release_date) }}
+          <v-card elevation="2" class="pa-6 rounded-xl">
+            <v-card-title class="text-h4 font-weight-bold mb-2">{{ movie.title }}</v-card-title>
+            <v-card-subtitle class="text-subtitle-1 text-grey-darken-1 mb-4">
+              🎬 Lançamento: {{ formatDate(movie.release_date) }}
             </v-card-subtitle>
 
             <v-divider class="mb-4"></v-divider>
 
+            <!-- Sinopse -->
             <v-card-text>
-              <div class="text-h6 mb-2">Sinopse</div>
-              <p class="text-body-1">{{ movie.overview }}</p>
+              <div class="text-h6 font-weight-medium mb-2">📖 Sinopse</div>
+              <p class="text-body-1 text-justify">{{ movie.overview }}</p>
             </v-card-text>
 
             <v-divider class="my-4"></v-divider>
 
-            <!-- Avaliações do filme -->
+            <!-- Avaliações -->
             <v-card-text>
               <div class="d-flex align-center justify-space-between mb-4">
-                <div class="text-h6">Avaliações</div>
+                <div class="text-h6 font-weight-medium">⭐ Avaliações</div>
                 <div v-if="averageRating">
                   <v-rating
                     :model-value="averageRating"
@@ -39,46 +43,49 @@
                     half-increments
                     readonly
                     size="small"
-                  ></v-rating>
-                  <span class="text-subtitle-2 ml-2">Nota média: {{ averageRating.toFixed(1) }} ({{ feedbacks.length }} avaliações)</span>
+                  />
+                  <span class="text-subtitle-2 ml-2 text-grey-darken-1">
+                    Média: {{ averageRating.toFixed(1) }} ({{ feedbacks.length }} avaliações)
+                  </span>
                 </div>
               </div>
 
-              <!-- Formulário para adicionar avaliação -->
-              <v-card variant="outlined" class="mb-4 pa-3">
+              <!-- Formulário de Avaliação -->
+              <v-card variant="outlined" class="pa-4 mb-6 rounded-lg">
                 <v-form @submit.prevent="submitFeedback">
-                  <div class="text-subtitle-1 mb-2">Adicionar sua avaliação</div>
+                  <div class="text-subtitle-1 font-weight-medium mb-2">✍️ Sua Avaliação</div>
                   <v-textarea
                     v-model="newFeedback.comentario"
-                    label="Seu comentário"
+                    label="Comentário"
                     variant="outlined"
                     rows="3"
-                    hide-details
                     class="mb-3"
-                  ></v-textarea>
+                  />
                   <div class="d-flex align-center mb-3">
-                    <span class="mr-2">Sua nota:</span>
-                      <v-text-field
-                        v-model="newFeedback.nota"
-                        type="number"
-                        min="0"
-                        max="5"
-                        step="1"
-                        hide-details
-                        style="max-width: 75px;"
-                      ></v-text-field>
+                    <span class="mr-2">Nota:</span>
+                    <v-text-field
+                      v-model="newFeedback.nota"
+                      type="number"
+                      min="0"
+                      max="5"
+                      step="1"
+                      hide-details
+                      density="compact"
+                      style="max-width: 75px;"
+                      variant="outlined"
+                    />
                   </div>
-                  <v-btn type="submit" color="primary" block>Enviar avaliação</v-btn>
+                  <v-btn type="submit" color="indigo" variant="flat" block>Enviar avaliação</v-btn>
                 </v-form>
               </v-card>
 
-              <!-- Lista de avaliações -->
+              <!-- Lista de Feedbacks -->
               <div v-if="feedbacks.length">
                 <v-card
                   v-for="feedback in feedbacks"
                   :key="feedback.id"
                   variant="outlined"
-                  class="mb-3 pa-3"
+                  class="mb-3 pa-4 rounded-lg"
                 >
                   <div class="d-flex justify-space-between align-center mb-2">
                     <v-rating
@@ -87,24 +94,24 @@
                       density="compact"
                       readonly
                       size="small"
-                    ></v-rating>
-                    <div class="d-flex align-center">
-                      <span class="text-caption me-4">{{ formatDate(feedback.created_at) }}</span>
-                      <span class="text-caption me-4">Nota: {{ feedback.nota }}/5</span>
+                    />
+                    <div class="text-caption text-grey-darken-1">
+                      <span class="me-4">{{ formatDate(feedback.created_at) }}</span>
+                      <span>Nota: {{ feedback.nota }}/5</span>
                     </div>
                   </div>
-                  <p class="text-body-2 mb-2">{{ feedback.comentario }}</p>
+                  <p class="text-body-2 text-grey-darken-2 mb-2">{{ feedback.comentario }}</p>
                   <div class="d-flex justify-end">
-                    <v-btn color="primary" variant="outlined" class="me-2" prepend-icon="mdi-pencil" @click="startEdit(feedback)">
+                    <v-btn size="small" color="indigo" variant="flat" class="me-2" prepend-icon="mdi-pencil" @click="startEdit(feedback)">
                       Editar
                     </v-btn>
-                    <v-btn color="error" variant="outlined" prepend-icon="mdi-delete" @click="confirmDelete(feedback.id)">
+                    <v-btn size="small" color="error" variant="flat" prepend-icon="mdi-delete" @click="confirmDelete(feedback.id)">
                       Excluir
                     </v-btn>
                   </div>
                 </v-card>
               </div>
-              <div v-else class="text-center my-4 text-subtitle-1">
+              <div v-else class="text-center my-4 text-subtitle-1 text-grey-darken-1">
                 Nenhuma avaliação disponível. Seja o primeiro a avaliar!
               </div>
             </v-card-text>
@@ -113,67 +120,64 @@
       </v-row>
     </v-container>
   </div>
+
+  <!-- Carregando -->
   <div v-else class="d-flex justify-center align-center" style="height: 400px">
-    <v-progress-circular indeterminate color="primary"></v-progress-circular>
+    <v-progress-circular indeterminate color="primary" size="50" />
   </div>
 
-  <!-- Diálogo de edição -->
+  <!-- Diálogo de Edição -->
   <v-dialog v-model="editDialog" max-width="500px" persistent>
     <v-card>
-      <v-toolbar color="primary" dark>
-        <v-toolbar-title>Editar avaliação</v-toolbar-title>
-        <v-spacer></v-spacer>
-        <v-btn icon @click="cancelEdit">
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
+      <v-toolbar color="primary" dark flat>
+        <v-toolbar-title>Editar Avaliação</v-toolbar-title>
+        <v-spacer />
+        <v-btn icon @click="cancelEdit"><v-icon>mdi-close</v-icon></v-btn>
       </v-toolbar>
-      <v-card-text class="pt-5">
+      <v-card-text class="pt-4">
         <v-textarea
           v-model="editingFeedback.comentario"
-          label="Seu comentário"
+          label="Comentário"
           variant="outlined"
           rows="3"
-          hide-details
           class="mb-4"
-        ></v-textarea>
-        <div class="d-flex align-center mb-3">
-          <span class="mr-3 font-weight-medium">Sua nota:</span>
+        />
+        <div class="d-flex align-center">
+          <span class="mr-3">Nota:</span>
           <v-text-field
             v-model="editingFeedback.nota"
             type="number"
             min="0"
             max="5"
             step="1"
-            hide-details
             style="max-width: 100px;"
             variant="outlined"
             density="compact"
-          ></v-text-field>
-          <span class="ml-2"></span>
+          />
         </div>
       </v-card-text>
       <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn color="error" variant="outlined" @click="cancelEdit" class="mr-2">Cancelar</v-btn>
-        <v-btn color="primary" variant="elevated" @click="updateFeedback">Salvar alterações</v-btn>
+        <v-spacer />
+        <v-btn color="error" variant="text" @click="cancelEdit">Cancelar</v-btn>
+        <v-btn color="primary" variant="elevated" @click="updateFeedback">Salvar</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
 
-  <!-- Diálogo de confirmação de exclusão -->
+  <!-- Diálogo de Exclusão -->
   <v-dialog v-model="deleteDialog" max-width="400px" persistent>
     <v-card>
-      <v-toolbar color="error" dark>
-        <v-toolbar-title>Confirmar exclusão</v-toolbar-title>
+      <v-toolbar color="error" dark flat>
+        <v-toolbar-title>Confirmar Exclusão</v-toolbar-title>
       </v-toolbar>
       <v-card-text class="pt-4">
-        <p class="text-body-1">Tem certeza que deseja excluir esta avaliação?</p>
-        <p class="text-body-2 font-italic mt-2">Esta ação não pode ser desfeita.</p>
+        <p class="text-body-1">Deseja realmente excluir esta avaliação?</p>
+        <p class="text-caption mt-2 text-grey-darken-1">Essa ação não poderá ser desfeita.</p>
       </v-card-text>
       <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn color="primary" variant="outlined" @click="deleteDialog = false" class="mr-2">Cancelar</v-btn>
-        <v-btn color="error" variant="elevated" @click="deleteFeedback">Excluir avaliação</v-btn>
+        <v-spacer />
+        <v-btn variant="text" color="primary" @click="deleteDialog = false">Cancelar</v-btn>
+        <v-btn color="error" variant="elevated" @click="deleteFeedback">Excluir</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
