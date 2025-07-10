@@ -2,7 +2,7 @@
   <div>
     <!-- Cabeçalho personalizado -->
     <div class="custom-header">
-      <h1 class="app-title">FalaCine!</h1>
+      <h1 class="app-title">Uniflix!</h1>
       <button class="logout-btn" @click="logout">
         <v-icon class="logout-icon">mdi-logout</v-icon>
         <span class="tooltip">Sair da conta</span>
@@ -10,7 +10,7 @@
     </div>
 
     <!-- Conteúdo principal -->
-    <v-container style="margin-top: 80px;">
+    <v-container style="margin-top: 80px">
       <v-row>
         <v-col
           v-for="movie in movies"
@@ -25,7 +25,6 @@
       </v-row>
     </v-container>
   </div>
-
 </template>
 
 <script>
@@ -62,16 +61,15 @@ export default {
       try {
         await signOut(auth);
         // Redireciona para login e limpa o histórico de navegação
-        this.$router.replace({ 
-          path: '/login',
-          query: { logout: 'true' } // Opcional: para mostrar mensagem de logout
+        this.$router.replace({
+          path: "/login",
+          query: { logout: "true" }, // Opcional: para mostrar mensagem de logout
         });
       } catch (error) {
         console.error("Erro ao fazer logout:", error);
         alert("Ocorreu um erro ao tentar sair. Por favor, tente novamente.");
       }
-    }
-
+    },
   },
 };
 </script>
@@ -89,7 +87,7 @@ export default {
   justify-content: space-between;
   padding: 0 16px;
   z-index: 1000;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .app-title {

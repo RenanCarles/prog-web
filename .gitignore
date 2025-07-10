@@ -14,6 +14,7 @@ dist/
 firebase-adminsdk-*.json
 *.firebase.json
 ETL-BD/etl/firebase-service-account.json
+back/serviceAccountKey.json
 
 # Arquivos de ambiente
 .env.local
