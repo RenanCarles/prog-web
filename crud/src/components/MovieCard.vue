@@ -3,7 +3,7 @@
     <!-- Badge de nota -->
     <div class="rating-badge">
       <span class="rating-value">
-        {{ movie.vote_average ? movie.vote_average.toFixed(1) : "N/A" }}
+        {{ averageRating ? averageRating.toFixed(1) : "N/A" }}
       </span>
     </div>
 
@@ -29,6 +29,8 @@
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
   name: "MovieCard",
   props: {
@@ -37,6 +39,15 @@ export default {
       required: true,
     },
   },
+  data() {
+    return {
+      feedbacks: [],
+      averageRating: null
+    };
+  },
+  created() {
+    this.fetchFeedbacks();
+  },
   methods: {
     getPosterUrl(path) {
       return path 
@@ -44,7 +55,26 @@ export default {
         : 'https://via.placeholder.com/300x450?text=Poster+Indisponível';
     },
     viewDetails(id) {
-      this.$router.push(`/movies/${id}`);
+      this.$router.push(`/movie/${id}`);
+    },
+    async fetchFeedbacks() {
+      try {
+        const response = await axios.get(`http://localhost:3000/api/feedback/movie/${this.movie.id}`);
+        this.feedbacks = response.data;
+        
+        // Calcular média de avaliações baseada no campo "nota" dos feedbacks
+        if (this.feedbacks.length > 0) {
+          const sum = this.feedbacks.reduce((total, feedback) => total + feedback.nota, 0);
+          this.averageRating = sum / this.feedbacks.length;
+        } else {
+          // Se não houver avaliações, usar o valor padrão do TMDB (se disponível)
+          this.averageRating = this.movie.vote_average || null;
+        }
+      } catch (error) {
+        // Se ocorrer erro na busca de avaliações, usar o valor padrão do TMDB
+        console.error("Erro ao buscar avaliações:", error);
+        this.averageRating = this.movie.vote_average || null;
+      }
     }
   },
 };

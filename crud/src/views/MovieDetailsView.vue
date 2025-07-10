@@ -33,7 +33,7 @@
                 <div class="text-h6">Avaliações</div>
                 <div v-if="averageRating">
                   <v-rating
-                    :model-value="averageRating / 2"
+                    :model-value="averageRating"
                     color="amber"
                     density="compact"
                     half-increments
@@ -82,7 +82,7 @@
                 >
                   <div class="d-flex justify-space-between align-center mb-2">
                     <v-rating
-                      :model-value="feedback.nota / 2"
+                      :model-value="feedback.nota"
                       color="amber"
                       density="compact"
                       readonly
@@ -90,7 +90,7 @@
                     ></v-rating>
                     <div class="d-flex align-center">
                       <span class="text-caption me-4">{{ formatDate(feedback.created_at) }}</span>
-                      <span class="text-caption me-4">Nota: {{ feedback.nota }}/10</span>
+                      <span class="text-caption me-4">Nota: {{ feedback.nota }}/5</span>
                     </div>
                   </div>
                   <p class="text-body-2 mb-2">{{ feedback.comentario }}</p>
