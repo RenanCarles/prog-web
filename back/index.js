@@ -85,10 +85,6 @@ app.post("/api/feedback", async (req, res) => {
     }
 
     const newFeedback = {
-      id:
-        avaliacoes.length > 0
-          ? String(Math.max(...avaliacoes.map((item) => parseInt(item.id))) + 1)
-          : "1",
       id_filme: req.body.id_filme,
       comentario: req.body.comentario,
       nota: parseFloat(req.body.nota),
@@ -105,21 +101,6 @@ app.post("/api/feedback", async (req, res) => {
       .json({ message: "Erro ao inserir feedback", error: error.message });
   }
 });
-
-//Obter todos os feedbacks
-// app.get('/api/feedback', async (req, res) => {
-//   try {
-//     const snapshot = await db.collection('avaliacoes').get();
-//     const feedbacks = [];
-//     snapshot.forEach(doc => {
-//       feedbacks.push({ id: doc.id, ...doc.data() });
-//     });
-//     res.json(feedbacks);
-//   } catch (error) {
-//     console.error('Erro ao buscar feedbacks:', error);
-//     res.status(500).json({ message: 'Erro ao buscar feedbacks', error: error.message });
-//   }
-// });
 
 //Obter feedbacks por ID do filme
 app.get("/api/feedback/movie/:id_filme", async (req, res) => {
@@ -153,65 +134,7 @@ app.get("/api/feedback/movie/:id_filme", async (req, res) => {
   }
 });
 
-//Obter um feedback específico pelo ID
-// app.get('/api/feedback/:id', async (req, res) => {
-//   try {
-//     const docRef = db.collection('avaliacoes').doc(req.params.id);
-//     const doc = await docRef.get();
-
-//     if (!doc.exists) {
-//       return res.status(404).json({ message: 'Feedback não encontrado' });
-//     }
-
-//     res.json({ id: doc.id, ...doc.data() });
-//   } catch (error) {
-//     console.error('Erro ao buscar feedback:', error);
-//     res.status(500).json({ message: 'Erro ao buscar feedback', error: error.message });
-//   }
-// });
-
-//Obter a média de avaliações de um filme
-app.get("/api/movies/:id_filme/rating", async (req, res) => {
-  try {
-    const id_filme = parseInt(req.params.id_filme);
-    const snapshot = await db
-      .collection("avaliacoes")
-      .where("id_filme", "==", id_filme)
-      .get();
-
-    if (snapshot.empty) {
-      return res
-        .status(404)
-        .json({ message: "Nenhum feedback encontrado para este filme" });
-    }
-
-    let totalNota = 0;
-    let count = 0;
-
-    snapshot.forEach((doc) => {
-      totalNota += doc.data().nota;
-      count++;
-    });
-
-    const mediaNotas = totalNota / count;
-
-    res.json({
-      id_filme,
-      media_notas: parseFloat(mediaNotas.toFixed(1)),
-      total_avaliacoes: count,
-    });
-  } catch (error) {
-    console.error("Erro ao calcular média de notas:", error);
-    res
-      .status(500)
-      .json({
-        message: "Erro ao calcular média de notas",
-        error: error.message,
-      });
-  }
-});
-
-//Atualizar nota de um feedback existente
+//Atualizar feedback existente
 app.put("/api/feedback/:id", async (req, res) => {
   try {
     const docRef = db.collection("avaliacoes").doc(req.params.id);
@@ -226,6 +149,13 @@ app.put("/api/feedback/:id", async (req, res) => {
     if (req.body.nota !== undefined) {
       updateData.nota = parseFloat(req.body.nota);
     }
+    
+    if (req.body.comentario !== undefined) {
+      updateData.comentario = req.body.comentario;
+    }
+    
+    // Adicionar timestamp de atualização
+    updateData.updated_at = new Date();
 
     await docRef.update(updateData);
 

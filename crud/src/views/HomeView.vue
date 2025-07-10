@@ -25,6 +25,7 @@
       </v-row>
     </v-container>
   </div>
+
 </template>
 
 <script>
@@ -55,6 +56,7 @@ export default {
         console.error("Erro ao buscar filmes:", error);
       }
     },
+
     async logout() {
       const auth = getAuth(firebaseApp);
       try {
@@ -69,6 +71,7 @@ export default {
         alert("Ocorreu um erro ao tentar sair. Por favor, tente novamente.");
       }
     }
+
   },
 };
 </script>
