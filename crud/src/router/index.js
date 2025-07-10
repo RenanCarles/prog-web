@@ -8,6 +8,7 @@ const auth = getAuth(firebaseApp);
 import HomeView from "../views/HomeView.vue";
 import LoginView from "@/views/LoginView.vue";
 import RegisterView from "@/views/RegisterView.vue";
+import MovieDetailsView from "@/views/MovieDetailsView.vue";
 
 // Função do guardião de rota
 const authGuard = (to, from, next) => {
@@ -50,6 +51,12 @@ const routes = [
     component: () =>
       import(/* webpackChunkName: "about" */ "../views/AboutView.vue"),
     meta: { requiresAuth: true }, // Rota privada
+  },
+  {
+    path: "/movie/:id",
+    name: "movie-details",
+    component: MovieDetailsView,
+    meta: { requiresAuth: false }, // Rota pública para que qualquer pessoa possa ver os detalhes do filme
   },
   // Adicione outras rotas conforme necessário
 ];

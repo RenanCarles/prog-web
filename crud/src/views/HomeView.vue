@@ -9,7 +9,7 @@
         md="4"
         lg="3"
       >
-        <MovieCard :movie="movie" />
+        <MovieCard :movie="movie" @ver-detalhes="verDetalhes" />
       </v-col>
     </v-row>
   </v-container>
@@ -45,6 +45,10 @@ export default {
     login() {
       // Navegar para página de login (defina a rota no router)
       this.$router.push("/login");
+    },
+    verDetalhes(id) {
+      // Navegar para a página de detalhes do filme
+      this.$router.push(`/movie/${id}`);
     },
   },
 };
